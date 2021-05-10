@@ -55,3 +55,11 @@ All we need to do now is march through the entire space and construct the mesh o
 
 
 ![result random](./Images/resultRandom.png)
+
+using the *FastNoiseLite* library from [Jordan Peck](https://github.com/Auburn/FastNoiseLite), we can apply a noise function instead of random values, this can give us a multitude of shapes depending on the noise function used, using *Simplex Noise* we can generate terrain like meshes.
+
+![simplex noise result](./Images/simplex.png)
+
+We can apply a little bit of smoothing on the result to obtain realistic results instead of the blocky look.
+
+![simplex noise result with smoothing](./Images/simplexSmooth.png)

@@ -6,10 +6,34 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class GridMaker : MonoBehaviour
 {
+    // general settings
     [Range(2,100)] public int height = 10;
     [Range(2, 100)] public int width = 10;
     [Range(2, 100)] public int depth = 10;
-    [Range(0, 1)] public float surfaceLevel = 0.5f;
+    [Range(0, 10)] public float surfaceLevel = 0.5f;
+
+    // shape settings
+    [Header("Shape Settings")]
+    public bool smooth = false;
+    public bool removeBounds = true;
+
+    // noise settings
+    [Header("Noise Settings")]
+    public bool useNoise = false;
+    public enum NoiseType
+    {
+        OpenSimplex2,
+        OpenSimplex2S,
+        Cellular,
+        Perlin,
+        Value,
+        ValueCubic,
+    }
+    public NoiseType noiseType;
+    public int seed = 0;
+    public Vector3 center = new Vector3(0, 0, 0);
+    [Range(0.1f, 10)] public float scale = 1;
+
     float[,,] heightMap;
 
     MeshFilter meshFilter;
@@ -17,7 +41,34 @@ public class GridMaker : MonoBehaviour
 
     private void OnValidate()
     {
-        heightMap = HeightMapGenerator.GenerateHeightMap(height, width, depth);
+        if (useNoise)
+        {
+            switch (noiseType)
+            {
+                case NoiseType.OpenSimplex2:
+                    heightMap = HeightMapGenerator.GenerateOpenSimplex2(height, width, depth, seed, center, scale, removeBounds);
+                    break;
+                case NoiseType.OpenSimplex2S:
+                    heightMap = HeightMapGenerator.GenerateOpenSimplex2S(height, width, depth, seed, center, scale, removeBounds);
+                    break;
+                case NoiseType.Cellular:
+                    heightMap = HeightMapGenerator.GenerateCellular(height, width, depth, seed, center, scale, removeBounds);
+                    break;
+                case NoiseType.Perlin:
+                    heightMap = HeightMapGenerator.GeneratePerlin(height, width, depth, seed, center, scale, removeBounds);
+                    break;
+                case NoiseType.Value:
+                    heightMap = HeightMapGenerator.GenerateValue(height, width, depth, seed, center, scale, removeBounds);
+                    break;
+                case NoiseType.ValueCubic:
+                    heightMap = HeightMapGenerator.GenerateValueCubic(height, width, depth, seed, center, scale, removeBounds);
+                    break;
+            }
+        }
+        else
+        {
+            heightMap = HeightMapGenerator.GenerateRandom(height, width, depth, removeBounds);
+        }
         ConstructMesh();        
     }
 
@@ -112,56 +163,82 @@ public class GridMaker : MonoBehaviour
                         // lookup the positions of the corner points making up the current edge
                         Vector3 cornerA = new Vector3();
                         Vector3 cornerB = new Vector3();
+                        float cornerAValue = 0f;
+                        float cornerBValue = 0f;
                         bool isVertex = true;
                         switch(edgeIndex)
                         {
                             case 0:
                                 cornerA = new Vector3(x, y, z);
                                 cornerB = new Vector3(x + 1, y, z);
+                                cornerAValue = heightMap[x, y, z];
+                                cornerBValue = heightMap[x + 1, y, z];
                                 break;
                             case 1:
                                 cornerA = new Vector3(x + 1, y, z);
                                 cornerB = new Vector3(x + 1, y, z + 1);
+                                cornerAValue = heightMap[x + 1, y, z];
+                                cornerBValue = heightMap[x + 1, y, z + 1];
                                 break;
                             case 2:
                                 cornerA = new Vector3(x + 1, y, z + 1);
                                 cornerB = new Vector3(x, y, z + 1);
+                                cornerAValue = heightMap[x + 1, y, z + 1];
+                                cornerBValue = heightMap[x, y, z + 1];
                                 break;
                             case 3:
                                 cornerA = new Vector3(x, y, z + 1);
                                 cornerB = new Vector3(x, y, z);
+                                cornerAValue = heightMap[x, y, z + 1];
+                                cornerBValue = heightMap[x, y, z];
                                 break;
                             case 4:
                                 cornerA = new Vector3(x, y + 1, z);
                                 cornerB = new Vector3(x + 1, y + 1, z);
+                                cornerAValue = heightMap[x, y + 1, z];
+                                cornerBValue = heightMap[x + 1, y + 1, z];
                                 break;
                             case 5:
                                 cornerA = new Vector3(x + 1, y + 1, z);
                                 cornerB = new Vector3(x + 1, y + 1, z + 1);
+                                cornerAValue = heightMap[x + 1, y + 1, z];
+                                cornerBValue = heightMap[x + 1, y + 1, z + 1];
                                 break;
                             case 6:
                                 cornerA = new Vector3(x + 1, y + 1, z + 1);
                                 cornerB = new Vector3(x, y + 1, z + 1);
+                                cornerAValue = heightMap[x + 1, y + 1, z + 1];
+                                cornerBValue = heightMap[x, y + 1, z + 1];
                                 break;
                             case 7:
                                 cornerA = new Vector3(x, y + 1, z + 1);
                                 cornerB = new Vector3(x, y + 1, z);
+                                cornerAValue = heightMap[x, y + 1, z + 1];
+                                cornerBValue = heightMap[x, y + 1, z];
                                 break;
                             case 8:
                                 cornerA = new Vector3(x, y, z);
                                 cornerB = new Vector3(x, y + 1, z);
+                                cornerAValue = heightMap[x, y, z];
+                                cornerBValue = heightMap[x, y + 1, z];
                                 break;
                             case 9:
                                 cornerA = new Vector3(x + 1, y, z);
                                 cornerB = new Vector3(x + 1, y + 1, z);
+                                cornerAValue = heightMap[x + 1, y, z];
+                                cornerBValue = heightMap[x + 1, y + 1, z];
                                 break;
                             case 10:
                                 cornerA = new Vector3(x + 1, y, z + 1);
                                 cornerB = new Vector3(x + 1, y + 1, z + 1);
+                                cornerAValue = heightMap[x + 1, y, z + 1];
+                                cornerBValue = heightMap[x + 1, y + 1, z + 1];
                                 break;
                             case 11:
                                 cornerA = new Vector3(x, y, z + 1);
                                 cornerB = new Vector3(x, y + 1, z + 1);
+                                cornerAValue = heightMap[x, y, z + 1];
+                                cornerBValue = heightMap[x, y + 1, z + 1];
                                 break;
                             default:
                                 isVertex = false;
@@ -171,7 +248,16 @@ public class GridMaker : MonoBehaviour
                         // the vertex position is the midpoint of the edge
                         if (isVertex) 
                         {
-                            Vector3 vertexPos = (cornerA + cornerB) / 2;
+                            Vector3 vertexPos = new Vector3();
+                            if (smooth)
+                            {
+                                float percent = (surfaceLevel - cornerAValue) / (cornerBValue - cornerAValue);
+                                vertexPos = cornerA + percent * (cornerB - cornerA);
+                            }
+                            else
+                            {
+                                vertexPos = (cornerA + cornerB) / 2;
+                            }
                             vertices.Add(vertexPos);
                             triangles.Add(triCount);
                             triCount++;
