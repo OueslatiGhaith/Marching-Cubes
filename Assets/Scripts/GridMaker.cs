@@ -6,9 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class GridMaker : MonoBehaviour
 {
-    [Range(1,100)] public int height = 10;
-    [Range(1, 100)] public int width = 10;
-    [Range(1, 100)] public int depth = 10;
+    [Range(2,100)] public int height = 10;
+    [Range(2, 100)] public int width = 10;
+    [Range(2, 100)] public int depth = 10;
     [Range(0, 1)] public float surfaceLevel = 0.5f;
     float[,,] heightMap;
 
@@ -18,12 +18,12 @@ public class GridMaker : MonoBehaviour
     private void OnValidate()
     {
         heightMap = HeightMapGenerator.GenerateHeightMap(height, width, depth);
-        Debug.Log(heightMap.Length);
-        ConstructMesh();
+        ConstructMesh();        
     }
 
     private void OnDrawGizmos()
     {
+        // draw the cubes representing the values of each point
         for (int x = 0; x < height; x++)
         {
             for (int y = 0; y < width; y++)
@@ -33,7 +33,7 @@ public class GridMaker : MonoBehaviour
                     if (heightMap[x, y, z] < surfaceLevel) 
                     {
                         Gizmos.color = Color.gray;
-                        Gizmos.DrawCube(new Vector3(x, y, z), new Vector3(0.01f, 0.01f, 0.01f));
+                        Gizmos.DrawCube(new Vector3(x, y, z), new Vector3(0.025f, 0.025f, 0.025f));
                     } else
                     {
                         Gizmos.color = Color.red;
@@ -42,6 +42,23 @@ public class GridMaker : MonoBehaviour
                 }
             }
         }
+
+        // draw lines representing the bounds of the mesh
+        Gizmos.color = Color.white;
+        Gizmos.DrawLine(new Vector3(0, 0, 0), new Vector3(height - 1, 0, 0));
+        Gizmos.DrawLine(new Vector3(height - 1, 0, 0), new Vector3(height - 1, 0, depth - 1));
+        Gizmos.DrawLine(new Vector3(height - 1, 0, depth - 1), new Vector3(0, 0, depth - 1));
+        Gizmos.DrawLine(new Vector3(0, 0, depth - 1), new Vector3(0, 0, 0));
+
+        Gizmos.DrawLine(new Vector3(0, width - 1, 0), new Vector3(height - 1, width - 1, 0));
+        Gizmos.DrawLine(new Vector3(height - 1, width - 1, 0), new Vector3(height - 1, width - 1, depth - 1));
+        Gizmos.DrawLine(new Vector3(height - 1, width - 1, depth - 1), new Vector3(0, width - 1, depth - 1));
+        Gizmos.DrawLine(new Vector3(0, width - 1, depth - 1), new Vector3(0, width - 1, 0));
+
+        Gizmos.DrawLine(new Vector3(0, 0, 0), new Vector3(0, width - 1, 0));
+        Gizmos.DrawLine(new Vector3(height - 1, 0, 0), new Vector3(height - 1, width - 1, 0));
+        Gizmos.DrawLine(new Vector3(height - 1, 0, depth - 1), new Vector3(height - 1, width - 1, depth - 1));
+        Gizmos.DrawLine(new Vector3(0, 0, depth - 1), new Vector3(0, width - 1, depth - 1));
     }
 
     private void ConstructMesh()
@@ -81,7 +98,7 @@ public class GridMaker : MonoBehaviour
                     int cubeIndex = 0;
                     for (int i = 0; i < 8; i++)
                     {
-                        if(values[i] < surfaceLevel)
+                        if(values[i] > surfaceLevel)
                         {
                             cubeIndex |= 1 << i;
                         }
